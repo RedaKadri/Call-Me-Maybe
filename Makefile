@@ -19,10 +19,6 @@ lint:
 	$(RUN) flake8 $(NAME)
 	$(RUN) mypy $(NAME) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
-lint-strict:
-	$(RUN) flake8 $(NAME)
-	$(RUN) mypy $(NAME) --strict
-
 format:
 	$(RUN) ruff format $(NAME)
 

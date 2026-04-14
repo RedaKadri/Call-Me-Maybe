@@ -1,11 +1,9 @@
-from typing import TypeVar
-
 from pydantic import TypeAdapter
 
 from src.schemas import FunctionDefinition, Prompt
 
 
-def parse_args(argv: list[str]) -> dict[str, str]:
+def parse_cli_args(argv: list[str]) -> dict[str, str]:
     if len(argv) % 2 != 0:
         raise ValueError("Unexpected arguments format")
     pairs = [(argv[i], argv[i + 1]) for i in range(0, len(argv), 2)]
@@ -31,19 +29,16 @@ def parse_args(argv: list[str]) -> dict[str, str]:
     return config
 
 
-def config_parser(config: dict[str, str]) -> any:
-    T = TypeVar("T")
+def load_input_data(config: dict[str, str]) -> dict[str, list]:
+    with open(config["functions_definition"]) as f:
+        functions_definition = TypeAdapter(
+            list[FunctionDefinition]
+        ).validate_json(f.read())
 
-    def load_file(path: str, model: TypeAdapter[T]) -> T:
-        with open(path) as f:
-            return model.validate_json(f.read())
-
-    functions_definition = load_file(
-        config["functions_definition"], TypeAdapter(list[FunctionDefinition])
-    )
-    prompts = load_file(config["input"], TypeAdapter(list[Prompt]))
+    with open(config["input"]) as f:
+        prompts = TypeAdapter(list[Prompt]).validate_json(f.read())
 
     return {
         "functions_definition": functions_definition,
-        "prompts": prompts
+        "prompts": prompts,
     }
