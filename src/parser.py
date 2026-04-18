@@ -31,9 +31,9 @@ def parse_cli_args(argv: list[str]) -> dict[str, str]:
 
 def load_input_data(config: dict[str, str]) -> dict[str, list]:
     with open(config["functions_definition"]) as f:
-        functions_definition = TypeAdapter(
-            list[FunctionDefinition]
-        ).validate_json(f.read())
+        functions_definition = TypeAdapter(list[FunctionDefinition]).validate_json(
+            f.read()
+        )
 
     with open(config["input"]) as f:
         prompts = TypeAdapter(list[Prompt]).validate_json(f.read())

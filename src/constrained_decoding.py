@@ -1,3 +1,0 @@
-class ConstrainedDecoding:
-    def __init__(self) -> None:
-        ...

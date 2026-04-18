@@ -1,22 +1,16 @@
-import numpy as np
-
-from llm_sdk import Small_LLM_Model
-
+from src.constrained_decoder import ConstrainedDecoder
 from src.schemas import FunctionDefinition, Prompt
 
 
 class CallMeMaybe:
     def __init__(
-        self,
-        functions_definitions: list[FunctionDefinition],
-        prompts: list[Prompt]
+        self, functions_definitions: list[FunctionDefinition], prompts: list[Prompt]
     ) -> None:
-        self.model = Small_LLM_Model()
 
         self.functions_definitions = functions_definitions
         self.prompts = prompts
 
-        self._stop_tokens_id = {151643, 151645}
+        self.decoder = ConstrainedDecoder(functions_definitions)
 
     def _format_prompt(self, user_message: str) -> str:
         system = (
@@ -35,23 +29,8 @@ class CallMeMaybe:
 
     def run(self) -> None:
         for prompt in self.prompts:
-            output = '{"name": "'
             formatted_prompt = self._format_prompt(prompt.prompt)
-            input_ids = self.model.encode(
-                (formatted_prompt + output)
-            )[0].tolist()
 
-            while True:
-                logits = np.array(
-                    self.model.get_logits_from_input_ids(input_ids)
-                )
-                next_token_id = int(np.argmax(logits))
+            output = self.decoder.generate(formatted_prompt)
 
-                if next_token_id in self._stop_tokens_id:
-                    break
-
-                input_ids.append(next_token_id)
-                token_text = self.model.decode([next_token_id])
-                output += token_text
-
-            print(output)
+            break
