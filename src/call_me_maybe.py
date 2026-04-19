@@ -4,9 +4,10 @@ from src.schemas import FunctionDefinition, Prompt
 
 class CallMeMaybe:
     def __init__(
-        self, functions_definitions: list[FunctionDefinition], prompts: list[Prompt]
+        self,
+        functions_definitions: list[FunctionDefinition],
+        prompts: list[Prompt]
     ) -> None:
-
         self.functions_definitions = functions_definitions
         self.prompts = prompts
 
@@ -31,6 +32,5 @@ class CallMeMaybe:
         for prompt in self.prompts:
             formatted_prompt = self._format_prompt(prompt.prompt)
 
-            output = self.decoder.generate(formatted_prompt)
-
-            break
+            self.decoder.generate(formatted_prompt)
+            print()
