@@ -32,5 +32,4 @@ class CallMeMaybe:
         for prompt in self.prompts:
             formatted_prompt = self._format_prompt(prompt.prompt)
 
-            self.decoder.generate(formatted_prompt)
-            print()
+            print(self.decoder.generate(formatted_prompt))

@@ -1,14 +1,11 @@
-import sys
-
-# testing
-import time
 import datetime
+import sys
+import time
 
 from pydantic import ValidationError
 
 from src.call_me_maybe import CallMeMaybe
 from src.parser import load_input_data, parse_cli_args
-
 
 if __name__ == "__main__":
     try:
