@@ -1,10 +1,8 @@
-from typing import Literal
-
 from pydantic import BaseModel
 
 
 class TypeField(BaseModel):
-    type: Literal["string", "number"]
+    type: str
 
 
 class FunctionDefinition(BaseModel):
