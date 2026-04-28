@@ -1,5 +1,7 @@
 import json
 
+from pydantic_core import from_json
+
 from src.constrained_decoder import ConstrainedDecoder
 from src.schemas import FunctionDefinition, Prompt
 
@@ -17,16 +19,16 @@ class CallMeMaybe:
 
     def _format_prompt(self, user_message: str) -> str:
         system = (
-            "你是一个函数调用助手。\n"
-            f"<tools>\n{self.functions_definitions}\n</tools>\n"
-            "- 必须准确理解用户意图，并选择最合适的函数。\n"
-            "- 参数值必须正确、完整，并符合用户请求。\n"
-            "- 如果使用正则表达式，必须语义正确且尽量通用，不要只匹配输入中的固定内容。\n"
-            "- 匹配一个或多个连续字符时，优先使用带量词的精确模式（如 \\\\d+、\\\\s+、[a-z]+）。\n"
-            '如果没有合适的函数可以完成任务，只输出：{"name": "none"}\n'
-            "否则，只输出："
-            '{"name": "function_name", "parameters": {"key": "value"}}\n'
-            "不要输出任何其他内容。\n"
+            "你可以调用一个或多个函数来协助处理用户请求。\n"
+            "在 <tools></tools> 中提供了函数签名：\n"
+            f"<tools>\n{self.functions_definitions}\n</tools>\n\n"
+            "返回一个包含函数名称和参数的 JSON 对象：\n"
+            "{\"name\": \"function_name\", \"parameters\": {\"key\": \"value\"}}\n\n"
+            "如果没有可用于该请求的函数，返回：\n"
+            "{\"name\": \"none\"}\n\n"
+            "当参数是正则表达式时，请生成一个通用的正则模式 "
+            "（例如 \\\\d+、[0-9]+、[a-z]+），而不是输入中的字面示例。"
+            "该正则必须匹配输入中的所有相关项，而不仅仅是一个。"
         )
         return (
             f"<|im_start|>system\n{system}<|im_end|>\n"
@@ -35,8 +37,23 @@ class CallMeMaybe:
         )
 
     def run(self) -> None:
+        results = []
+
         for prompt in self.prompts:
             formatted_prompt = self._format_prompt(prompt.prompt)
 
             output = self.decoder.generate(formatted_prompt)
-            print(output)
+
+            try:
+                parsed = from_json(output)
+            except json.JSONDecodeError:
+                parsed = {"name": "none"}
+
+            results.append({
+                "prompt": prompt.prompt,
+                "name": parsed.get("name", "none"),
+                "parameters": parsed.get("parameters", {})
+            })
+
+        with open("results.json", "w") as f:
+            json.dump(results, f, indent=4)

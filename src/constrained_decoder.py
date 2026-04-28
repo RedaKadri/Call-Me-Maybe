@@ -56,7 +56,7 @@ class ConstrainedDecoder:
         if type == "string":
             if len(curr_param) == 0:
                 return token.startswith('Ġ"')
-            elif '"' in next_token and "\\" not in next_token:
+            elif ('",' in next_token or '"}' in next_token) and "\\" not in next_token:
                 if len(self.state["fn_params"]) == (
                         self.state["curr_fn_param_idx"] + 1
                 ):
@@ -64,7 +64,7 @@ class ConstrainedDecoder:
                 else:
                     return token.endswith('",')
 
-        if type == "number":
+        if type == "number" or type == "integer":
             if len(curr_param) == 0:
                 return token in ["Ġ", "Ġ-"]
             elif next_token == "," or next_token == "}}":
@@ -188,7 +188,16 @@ class ConstrainedDecoder:
             self.state["step"] = "EXPECT_PARAMETER_VALUE"
 
         elif self.state["step"] == "EXPECT_PARAMETER_VALUE":
-            if output.endswith(',') or output.endswith("}"):
+            ((_, curr_fn_param_type),) = self.state["fn_params"][
+                self.state["curr_fn_param_idx"]
+            ].items()
+            if (
+                (
+                    ((curr_fn_param_type == "number" or curr_fn_param_type == "integer") and output.endswith(','))
+                    or (curr_fn_param_type == "string" and output.endswith('",'))
+                )
+                or output.endswith("}")
+            ):
                 if output.endswith("}"):
                     self.state["step"] = "END"
                 else:
